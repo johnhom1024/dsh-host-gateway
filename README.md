@@ -2,7 +2,7 @@
   <img src="docs/assets/whale-girl-ios-app-promo-16x9.png" alt="DeepSeek Harness Mobile 与移动网关" width="100%">
 </p>
 
-# dsh-remote-host-gateway
+# dsh-host-gateway
 
 本仓库是 [**dsh-plugin-mobile-gateway**](https://github.com/Clarklevis1995/dsh-plugin-mobile-gateway) 的 fork，上游作者 **Clarklevis1995**，以 **MIT** 许可发布（原文与我们的版权行见 [LICENSE](LICENSE)）。fork 基线是上游 commit **`f467033`**（包版本 `0.11.1`，即上游合并 PR #32 之后的那次提交）；快照内容对应我们分支的 `0.12.2` 源码，本仓库从**干净初始提交**重新开始，版本号定为 **`1.0.0`**。相对上游基线，本 fork 增加了：白名单化的 **`host-api` 精确路由代理**（`hostApiPaths`，默认关闭）、实时 **`job/registered` 与 `job/settled` 的结构化字段**（`jobId` / `toolCall` / `label` / 起止时间 / 状态 / 结果原因）、工作区重命名与删除帧、晚连接设备的待答问题重放；上游基线里那套**浏览器设备子协议**（`dsh-device.*`，免自定义头完成配对）也是我们先以 PR #32 提给上游、随后并入基线的。逐项说明与改动清单见 [NOTICE](NOTICE)，协议本身没变，仍是 `dsh-mobile-v1` / `hello.protocol = 3`（见 [PROTOCOL.md](PROTOCOL.md)）。
 
@@ -10,9 +10,9 @@
 >
 > **跟上游同步**：本仓库不带上游提交历史，**不要直接 merge**。用 `git remote add upstream https://github.com/Clarklevis1995/dsh-plugin-mobile-gateway.git` → `git fetch upstream` → 按需 `git cherry-pick <commit>`，每次同步后在本条与 [NOTICE](NOTICE) 里追加新基线说明。
 >
-> **从旧包迁移**：包名已改为 `dsh-remote-host-gateway`，`dsh.profile.bundles` 要跟着换名；步骤见 [MIGRATION.md](MIGRATION.md)——补丁行 `id: mobile-gateway`、`deviceFile`、已配对设备都不受影响。
+> **从旧包迁移**：包名已改为 `dsh-host-gateway`，`dsh.profile.bundles` 要跟着换名；步骤见 [MIGRATION.md](MIGRATION.md)——补丁行 `id: mobile-gateway`、`deviceFile`、已配对设备都不受影响。
 >
-> **安装**：`dsh plugin --profile web add github:johnhom1024/dsh-remote-host-gateway`
+> **安装**：`dsh plugin --profile web add github:johnhom1024/dsh-host-gateway`
 
 DeepSeek Harness 的设备鉴权移动网关，支持会话与实时事件、排队消息同步及编辑/删除/Steer、Session 归档和重命名的双向同步、停止当前生成并稍后继续、任务列表和当前 Goal 同步及管理、服务端驱动的命令和技能菜单、Human-in-the-loop、图片及文件传输。安装后，Harness WebUI 左侧边栏会出现“移动设备”入口，可直接开启网关、生成配对二维码和管理可信设备。
 
@@ -137,13 +137,13 @@ endpoints:
 局域网使用只需安装插件：
 
 ```bash
-dsh plugin --profile web add github:johnhom1024/dsh-remote-host-gateway
+dsh plugin --profile web add github:johnhom1024/dsh-host-gateway
 ```
 
 需要在 Linux 服务器通过公网 IP 接入时，推荐执行统一初始化命令。它会安装/更新插件，并请求一次 sudo 权限安装系统 Helper：
 
 ```bash
-npx --yes github:johnhom1024/dsh-remote-host-gateway init
+npx --yes github:johnhom1024/dsh-host-gateway init
 ```
 
 `init` 会把当前正在执行的 npm 包精确版本安装到 DSH profile，并仅对该版本跳过 pnpm 的新版本等待期，确保插件与 Helper 版本一致。
@@ -191,7 +191,7 @@ pnpm --version
 
 ```bash
 npm_config_registry=https://registry.npmjs.org \
-npx --yes github:johnhom1024/dsh-remote-host-gateway init
+npx --yes github:johnhom1024/dsh-host-gateway init
 ```
 
 该命令会安装或更新插件，并请求一次 sudo 权限安装 Nginx、Certbot、系统 Helper 和证书续期定时器。`init` 会确保 DSH profile 与 Helper 使用同一个精确版本。
@@ -293,13 +293,13 @@ Tailscale Serve 只允许同一 Tailnet 中符合访问规则的设备连接，�
 查看状态：
 
 ```bash
-sudo env "PATH=$PATH" npx --yes github:johnhom1024/dsh-remote-host-gateway status
+sudo env "PATH=$PATH" npx --yes github:johnhom1024/dsh-host-gateway status
 ```
 
 移除公网入口：
 
 ```bash
-sudo env "PATH=$PATH" npx --yes github:johnhom1024/dsh-remote-host-gateway remove
+sudo env "PATH=$PATH" npx --yes github:johnhom1024/dsh-host-gateway remove
 ```
 
 ## 更新插件
@@ -307,7 +307,7 @@ sudo env "PATH=$PATH" npx --yes github:johnhom1024/dsh-remote-host-gateway remov
 重新运行初始化命令会同时更新插件和系统 Helper：
 
 ```bash
-npx --yes github:johnhom1024/dsh-remote-host-gateway init
+npx --yes github:johnhom1024/dsh-host-gateway init
 ```
 
 随后停止并重新启动 `dsh web`。
@@ -315,13 +315,13 @@ npx --yes github:johnhom1024/dsh-remote-host-gateway init
 ## 卸载插件
 
 ```bash
-dsh plugin --profile web remove dsh-remote-host-gateway
+dsh plugin --profile web remove dsh-host-gateway
 ```
 
 如需同时移除系统 Helper（不会删除现有 Nginx 公网配置）：
 
 ```bash
-sudo env "PATH=$PATH" npx --yes github:johnhom1024/dsh-remote-host-gateway remove-helper
+sudo env "PATH=$PATH" npx --yes github:johnhom1024/dsh-host-gateway remove-helper
 ```
 
 ## 常见问题
@@ -342,7 +342,7 @@ sudo env "PATH=$PATH" npx --yes github:johnhom1024/dsh-remote-host-gateway remov
 ## 源码开发
 
 ```bash
-dsh plugin --profile web add file:/absolute/path/to/dsh-remote-host-gateway
+dsh plugin --profile web add file:/absolute/path/to/dsh-host-gateway
 npm test
 ```
 

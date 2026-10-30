@@ -1,4 +1,4 @@
-dsh-remote-host-gateway
+dsh-host-gateway
 ==================
 
 This project is a fork of **dsh-plugin-mobile-gateway**.
@@ -57,7 +57,7 @@ Upstream contribution that is already inside the fork base
 
 Fork-only housekeeping (no protocol change)
 -------------------------------------------
-- Package renamed `dsh-plugin-mobile-gateway` -> `dsh-remote-host-gateway`, version
+- Package renamed `dsh-plugin-mobile-gateway` -> `dsh-host-gateway`, version
   reset to `1.0.0`, repository / homepage / bugs point at this fork.
 - `cordis.patch.yml`: the bundle `name` follows the package rename; the row `id`
   stays `mobile-gateway`, because profile patches address the row by id.

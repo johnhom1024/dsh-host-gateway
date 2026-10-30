@@ -1,6 +1,6 @@
 # 让手机成为 AI Agent 的第二块屏幕：dsh-plugin-mobile-gateway
 
-> **本文件是上游博客原文，逐字保留。** 文中的包名与安装命令（如 `dsh plugin add dsh-plugin-mobile-gateway`、`npx dsh-plugin-mobile-gateway ...`）已过时：本仓库是 `dsh-remote-host-gateway`，安装请以 [README](../README.md) 与 [MIGRATION.md](../MIGRATION.md) 为准。
+> **本文件是上游博客原文，逐字保留。** 文中的包名与安装命令（如 `dsh plugin add dsh-plugin-mobile-gateway`、`npx dsh-plugin-mobile-gateway ...`）已过时：本仓库是 `dsh-host-gateway`，安装请以 [README](../README.md) 与 [MIGRATION.md](../MIGRATION.md) 为准。
 
 > 一个给 DeepSeek Harness 写的常驻插件：在不改动宿主一行代码的前提下，为移动端加上一条经过设备鉴权的实时通道。
 

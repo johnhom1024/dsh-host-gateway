@@ -40,12 +40,12 @@ function pluginInstallArgs(packageSpec = currentPackageSpec()) {
 
 function printHelp() {
   console.log(`Usage:
-  dsh-remote-host-gateway setup [--ip <public IPv4>] [--port 3080] [--email <address>] [--yes]
-  dsh-remote-host-gateway init
-  dsh-remote-host-gateway setup-helper
-  dsh-remote-host-gateway remove-helper [--yes]
-  dsh-remote-host-gateway status
-  dsh-remote-host-gateway remove [--yes]
+  dsh-host-gateway setup [--ip <public IPv4>] [--port 3080] [--email <address>] [--yes]
+  dsh-host-gateway init
+  dsh-host-gateway setup-helper
+  dsh-host-gateway remove-helper [--yes]
+  dsh-host-gateway status
+  dsh-host-gateway remove [--yes]
 
 The setup command supports Ubuntu/Debian servers. It keeps DSH on 127.0.0.1,
 publishes only /ws/mobile through Nginx on 443, obtains a short-lived trusted
@@ -393,7 +393,7 @@ Setup completed.
 3. The iOS client should connect to wss://${ip}/ws/mobile.
 
 Check later with:
-  sudo npx github:johnhom1024/dsh-remote-host-gateway status`)
+  sudo npx github:johnhom1024/dsh-host-gateway status`)
 }
 
 function status() {
