@@ -1,4 +1,4 @@
-# dsh-remote-gateway bundle patch (fork of dsh-plugin-mobile-gateway, MIT).
+# dsh-remote-host-gateway bundle patch (fork of dsh-plugin-mobile-gateway, MIT).
 # Applied after dsh-base and dsh-web-app: inserts the persistent /ws/mobile
 # gateway row into the host plane (it consumes `webServer`, the Host Remote
 # Gateway and the `session/event` feed, and publishes no service of its own).
@@ -8,7 +8,7 @@
 # swapped for this fork (see MIGRATION.md).
 - insert:
     - id: mobile-gateway
-      name: 'dsh-remote-gateway'
+      name: 'dsh-remote-host-gateway'
       config:
         # Secure by default: every mobile WebSocket must authenticate with a
         # paired device credential. Pair/revoke APIs remain local-machine only.

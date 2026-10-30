@@ -72,7 +72,7 @@ fs.symlinkSync(binPath, linkedBin)
 assert.equal(isMainModule(linkedBin), true)
 const linkedInvocation = spawnSync(process.execPath, [linkedBin, '--help'], { encoding: 'utf8' })
 assert.equal(linkedInvocation.status, 0, linkedInvocation.stderr)
-assert.match(linkedInvocation.stdout, /dsh-remote-gateway setup/)
+assert.match(linkedInvocation.stdout, /dsh-remote-host-gateway setup/)
 fs.rmSync(temporaryDirectory, { recursive: true })
 
 console.log('public IP setup tests passed')

@@ -1,5 +1,5 @@
 {
-  "name": "dsh-remote-gateway",
+  "name": "dsh-remote-host-gateway",
   "version": "1.0.0",
   "description": "Remote gateway plugin for DeepSeek Harness — a fork of dsh-plugin-mobile-gateway that adds a whitelisted host-api proxy and structured live job frames.",
   "main": "lib/index.mjs",
@@ -13,11 +13,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/johnhom1024/dsh-remote-gateway.git"
+    "url": "git+https://github.com/johnhom1024/dsh-remote-host-gateway.git"
   },
-  "homepage": "https://github.com/johnhom1024/dsh-remote-gateway#readme",
+  "homepage": "https://github.com/johnhom1024/dsh-remote-host-gateway#readme",
   "bugs": {
-    "url": "https://github.com/johnhom1024/dsh-remote-gateway/issues"
+    "url": "https://github.com/johnhom1024/dsh-remote-host-gateway/issues"
   },
   "dependencies": {
     "@deepseek-ai/schemastery": "^3.18.1",

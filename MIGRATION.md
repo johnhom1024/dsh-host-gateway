@@ -1,4 +1,4 @@
-# 从 `dsh-plugin-mobile-gateway` 迁移到 `dsh-remote-gateway`
+# 从 `dsh-plugin-mobile-gateway` 迁移到 `dsh-remote-host-gateway`
 
 本仓库是上游的 fork，**协议没变**（仍是 `dsh-mobile-v1` / `hello.protocol = 3`），
 变的只有 npm 包名与 bundle 名。迁移是一次「换包」操作，不需要重新配对设备。
@@ -7,7 +7,7 @@
 >
 > | 项 | 变不变 |
 > |---|---|
-> | npm 包名 `dsh-plugin-mobile-gateway` → `dsh-remote-gateway` | **变** |
+> | npm 包名 `dsh-plugin-mobile-gateway` → `dsh-remote-host-gateway` | **变** |
 > | `dsh.profile.bundles` 里的包名 | **变**（必须同步改，否则 bundle 不生效） |
 > | profile 补丁行 `- id: mobile-gateway` | 不变 |
 > | 配置键（`gatewayEnabled` / `lanPort` / `requireAuth` / `hostApiPaths` / `deviceFile` …） | 不变 |
@@ -22,15 +22,15 @@
 
 ```bash
 # A. 直接按仓库装（推荐，git 依赖）
-dsh plugin --profile web add github:johnhom1024/dsh-remote-gateway
+dsh plugin --profile web add github:johnhom1024/dsh-remote-host-gateway
 
 # B. 克隆后打 tgz（可复现，离线可用）
-git clone https://github.com/johnhom1024/dsh-remote-gateway.git
-cd dsh-remote-gateway && npm pack
-# → dsh-remote-gateway-1.0.0.tgz
+git clone https://github.com/johnhom1024/dsh-remote-host-gateway.git
+cd dsh-remote-host-gateway && npm pack
+# → dsh-remote-host-gateway-1.0.0.tgz
 
 # C. 从 tgz 装
-dsh plugin --profile web add /absolute/path/to/dsh-remote-gateway-1.0.0.tgz
+dsh plugin --profile web add /absolute/path/to/dsh-remote-host-gateway-1.0.0.tgz
 ```
 
 ## 2. 换掉 profile 里的 bundle 名
@@ -55,7 +55,7 @@ profile 的 `package.json`（例如 `~/.dsh/profiles/web/package.json`）里：
     "bundles": [
       "@deepseek-ai/dsh-base",
       "@deepseek-ai/dsh-web-app",
-      "dsh-remote-gateway"
+      "dsh-remote-host-gateway"
     ]
   }
 }
@@ -87,7 +87,7 @@ dsh plugin --profile web remove dsh-plugin-mobile-gateway
 dsh --profile web --no-open
 
 # 版本核对（容器场景把 <profile> 换成容器内路径）
-node -e "console.log(require('<profile>/node_modules/dsh-remote-gateway/package.json').version)"
+node -e "console.log(require('<profile>/node_modules/dsh-remote-host-gateway/package.json').version)"
 # 期望：1.0.0
 ```
 
@@ -104,7 +104,7 @@ node -e "console.log(require('<profile>/node_modules/dsh-remote-gateway/package.
 ## 6. 回滚
 
 ```bash
-dsh plugin --profile web remove dsh-remote-gateway
+dsh plugin --profile web remove dsh-remote-host-gateway
 dsh plugin --profile web add dsh-plugin-mobile-gateway@0.12.2   # 或原来的本地 tgz
 # 把 profile bundles 里的名字改回去，重启宿主
 ```
