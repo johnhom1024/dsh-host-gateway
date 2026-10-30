@@ -58,7 +58,9 @@ Upstream contribution that is already inside the fork base
 Fork-only housekeeping (no protocol change)
 -------------------------------------------
 - Package renamed `dsh-plugin-mobile-gateway` -> `dsh-host-gateway`, version
-  reset to `1.0.0`, repository / homepage / bugs point at this fork.
+  reset to `1.0.0` (1.0.1 renames the browser client module id to match the
+  package name; keeping the upstream id caused a duplicate-factory boot failure
+  when both packages were present), repository / homepage / bugs point at this fork.
 - `cordis.patch.yml`: the bundle `name` follows the package rename; the row `id`
   stays `mobile-gateway`, because profile patches address the row by id.
 - Added this NOTICE, `MIGRATION.md`, and the attribution section at the top of
@@ -67,8 +69,12 @@ Fork-only housekeeping (no protocol change)
 Intentionally NOT renamed
 -------------------------
 The wire protocol (`dsh-mobile-v1`, `hello.protocol = 3`), the bundle row id
-(`mobile-gateway`), log/error prefixes that mention `mobile-gateway`, and the
-browser client module id `dsh-plugin-mobile-gateway` in `lib/client.js` are left
-untouched on purpose: they are protocol and identity strings that clients, logs
-and existing installs already refer to. Renaming them would break compatibility
-without any benefit. See `MIGRATION.md` section 7.
+(`mobile-gateway`), the on-disk management MARKER, and log/error prefixes that
+mention `mobile-gateway` are left untouched on purpose: they are protocol,
+on-disk and identity strings that clients, logs and existing installs already
+refer to.
+
+The browser client module id is *not* in this list any more: 1.0.1 renamed it to
+`dsh-host-gateway`. Leaving the upstream id registered while the old package was
+also installed made DSH's client-module graph reject the boot with
+`duplicate factory registration`. See `MIGRATION.md` section 7.

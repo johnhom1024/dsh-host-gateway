@@ -14,7 +14,7 @@
 > | `deviceFile` 路径与设备表内容 | 不变（已配对设备继续有效） |
 > | 网关实例状态文件（`gatewayStateFile`）、`gatewayId` | 不变 |
 > | WS 端点 `/ws/mobile`、协议版本、能力位名 | 不变 |
-> | 浏览器客户端模块 id（`lib/client.js` 里的 `dsh-plugin-mobile-gateway`） | 不变，见下 |
+> | 浏览器客户端模块 id（`lib/client.js` 里的 `dsh-host-gateway`） | **变**（1.0.1 起与包名一致；1.0.0 的旧 id 会与旧包撞名，见 §7） |
 
 ## 1. 取包
 
@@ -111,11 +111,21 @@ dsh plugin --profile web add dsh-plugin-mobile-gateway@0.12.2   # 或原来的�
 
 设备表与状态文件不受影响，回滚后无需重新配对。
 
-## 7. 一个已知的命名残留（有意保留）
+## 7. 浏览器客户端模块 id（1.0.1 起与包名一致）
 
-`lib/client.js` 里的浏览器客户端模块 `id` 仍是 `dsh-plugin-mobile-gateway`。它是
-**客户端模块身份**，与包名解耦：日志、旧安装、协议抓包都按这个 id 对照，改名只会让排查对不上。
-上游若将来也改名，再一并对齐。
+`lib/client.js` 的模块 `id` 在 **1.0.1** 起改为 `dsh-host-gateway`，与包名一致。
+
+1.0.0 保留了上游的 `dsh-plugin-mobile-gateway`，这是个真实事故：新旧两个包同时存在于客户端模块图里时，
+web boot 会直接中止并报
+
+```
+client-modules: duplicate factory registration for "dsh-plugin-mobile-gateway"
+(bundle executed twice without invalidate?)
+```
+
+所以升级到 1.0.1 的正确顺序是：**先卸掉旧包**（`dsh plugin --profile web remove <旧包名>`），
+再装 `dsh-host-gateway`，然后重启 `dsh web`（重启会重建客户端模块图）。如果启动日志里仍出现
+`duplicate factory registration`，说明还有旧包残留，先把它找出来删掉，不要靠重装新包硬顶。
 
 ## 8. 版本号约定
 
