@@ -1,0 +1,50 @@
+{
+  "name": "dsh-remote-gateway",
+  "version": "1.0.0",
+  "description": "Remote gateway plugin for DeepSeek Harness — a fork of dsh-plugin-mobile-gateway that adds a whitelisted host-api proxy and structured live job frames.",
+  "main": "lib/index.mjs",
+  "files": [
+    "bin",
+    "helper",
+    "lib",
+    "docs",
+    "cordis.patch.yml",
+    "PROTOCOL.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/johnhom1024/dsh-remote-gateway.git"
+  },
+  "homepage": "https://github.com/johnhom1024/dsh-remote-gateway#readme",
+  "bugs": {
+    "url": "https://github.com/johnhom1024/dsh-remote-gateway/issues"
+  },
+  "dependencies": {
+    "@deepseek-ai/schemastery": "^3.18.1",
+    "ws": "^8.18.0",
+    "qrcode": "^1.5.4"
+  },
+  "bin": "bin/setup-ip.mjs",
+  "scripts": {
+    "test": "node test/wire-json.test.mjs && node test/setup-ip.test.mjs && node test/host-adapter.test.mjs && node --test test/file-upload.test.mjs && node test/speech-input.test.mjs && node test/plugin-management.test.mjs && node test/session-preset.test.mjs && node test/session-follower.test.mjs && node --test test/agent-team.test.mjs && node test/session-event-details.test.mjs && node test/job-wire.test.mjs && node test/gateway.test.mjs && node --test test/approval-replay.test.mjs && node --test test/question-replay.test.mjs && node test/auth.test.mjs && node test/lan.test.mjs && node test/cloudflared-binary.test.mjs && node test/cloudflare-tunnel.test.mjs && node --test test/public-endpoint-check.test.mjs && node test/gateway-tools.test.mjs && node test/multi-gateway.test.mjs"
+  },
+  "exports": {
+    ".": "./lib/index.mjs",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-client-ui-layout",
+        "@deepseek-ai/dsh-client-ui-sidebar"
+      ]
+    }
+  },
+  "license": "MIT"
+}

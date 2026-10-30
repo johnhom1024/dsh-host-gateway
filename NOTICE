@@ -1,0 +1,74 @@
+dsh-remote-gateway
+==================
+
+This project is a fork of **dsh-plugin-mobile-gateway**.
+
+Upstream
+--------
+- Project: dsh-plugin-mobile-gateway
+- Repository: https://github.com/Clarklevis1995/dsh-plugin-mobile-gateway
+- Author: Clarklevis1995
+- License: MIT — the upstream license text is reproduced verbatim in LICENSE,
+  including the line `Copyright (c) 2026 Clarklevis1995`, as the MIT license
+  requires. Our own copyright line is appended below it.
+
+Fork provenance
+---------------
+- Fork base: upstream commit `f467033`
+  ("Merge pull request #32 from johnhom1024/feat/browser-pairing-device-subprotocol"),
+  package version `0.11.1`. `f467033` is an ancestor of the snapshot below;
+  nothing from upstream main after `f467033` is included.
+- Snapshot content: package version `0.12.2` — six commits on top of `f467033`,
+  listed in the next section.
+- Versioning: this repository restarts at `1.0.0` and does not follow upstream's
+  `0.x` numbers. It starts from a single clean initial commit: upstream history
+  is not carried over, so `git log` here is not a substitute for upstream history.
+
+Changes relative to upstream `f467033` (included in this snapshot)
+------------------------------------------------------------------
+1. Workspace rename and delete frames — `workspace-rename` / `workspace-delete`
+   requests, the `workspace-manage-v1` capability, and proxying of the host's
+   `workspace/rename` and `workspace/delete`.
+2. Replay of pending questions when a device connects later — a device that
+   joins after a question was raised still receives it.
+3. `feat(host-api)`: whitelisted exact-route Host API proxy, **default off**.
+   `hostApiPaths` allow-list, POST-only, loopback-only `?gateway=` shorthand,
+   `host-api-proxy-v1` capability advertised only when the allow-list is
+   non-empty. See `docs/host-api-proxy-spike.md`.
+4. Docs: instructions for running the gateway against a second host profile.
+5. `feat(wire)`: live `job/settled` carries tool/job identity and timing —
+   `jobId` / `kind` / `label` / `toolCall` / `startedAt` / `finishedAt` /
+   `status` / `cause` / `producerReported` / `detail`, using the same field names
+   as the history side (duration = `finishedAt - startedAt`).
+6. `feat(wire)`: live `job/registered` carries identity fields — `jobId` /
+   `kind` / `label` / `toolCall{callId,rootCallId}` / `startedAt`, so a client
+   can pair `jobId` with `toolCall.callId` structurally from the start of a job
+   instead of parsing a shell tool's kickoff text.
+
+Both wire additions are purely additive: a client that ignores them keeps
+working unchanged.
+
+Upstream contribution that is already inside the fork base
+----------------------------------------------------------
+- Browser pairing device subprotocol (`dsh-device.<id>` / `dsh-device-name.<name>`
+  in the `Sec-WebSocket-Protocol` list, so a plain browser needs no custom
+  header to pair) was contributed upstream by this fork's author as PR #32 and
+  merged as `f467033`. It is therefore part of the base, not part of the delta.
+
+Fork-only housekeeping (no protocol change)
+-------------------------------------------
+- Package renamed `dsh-plugin-mobile-gateway` -> `dsh-remote-gateway`, version
+  reset to `1.0.0`, repository / homepage / bugs point at this fork.
+- `cordis.patch.yml`: the bundle `name` follows the package rename; the row `id`
+  stays `mobile-gateway`, because profile patches address the row by id.
+- Added this NOTICE, `MIGRATION.md`, and the attribution section at the top of
+  README.
+
+Intentionally NOT renamed
+-------------------------
+The wire protocol (`dsh-mobile-v1`, `hello.protocol = 3`), the bundle row id
+(`mobile-gateway`), log/error prefixes that mention `mobile-gateway`, and the
+browser client module id `dsh-plugin-mobile-gateway` in `lib/client.js` are left
+untouched on purpose: they are protocol and identity strings that clients, logs
+and existing installs already refer to. Renaming them would break compatibility
+without any benefit. See `MIGRATION.md` section 7.
