@@ -35,7 +35,7 @@
         # Both use a separate authenticated loopback-only mobile endpoint.
         # cloudflarePort: 3082
         # cloudflaredPath: /path/to/cloudflared
-        # Written automatically by `sudo npx dsh-plugin-mobile-gateway setup`.
+        # Written automatically by `sudo npx dsh-host-gateway setup`.
         publicUrlFile: /etc/dsh-mobile-gateway/public-url
 
 # The gateway's `search` query channel needs the full-text session index,

@@ -36,9 +36,9 @@ for (const address of ['', '127.0.0.1', '10.0.0.1', '172.16.0.1', '192.168.1.1',
 assert.equal(certName('203.0.113.7'), 'dsh-mobile-gateway-203-0-113-7')
 const packageManifest = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
 assert.equal(currentPackageSpec(), `${packageManifest.name}@${packageManifest.version}`)
-assert.deepEqual(pluginInstallArgs('dsh-plugin-mobile-gateway@9.8.7'), [
-  'plugin', '--profile', 'web', 'add', 'dsh-plugin-mobile-gateway@9.8.7',
-  '--config.minimum-release-age-exclude=dsh-plugin-mobile-gateway@9.8.7',
+assert.deepEqual(pluginInstallArgs('dsh-host-gateway@9.8.7'), [
+  'plugin', '--profile', 'web', 'add', 'dsh-host-gateway@9.8.7',
+  '--config.minimum-release-age-exclude=dsh-host-gateway@9.8.7',
 ])
 
 const httpConfig = nginxHttpConfig('203.0.113.7')
@@ -67,7 +67,7 @@ assert.equal(helperSyntax.status, 0, helperSyntax.stderr)
 
 const binPath = fileURLToPath(new URL('../bin/setup-ip.mjs', import.meta.url))
 const temporaryDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-mobile-gateway-bin-'))
-const linkedBin = path.join(temporaryDirectory, 'dsh-plugin-mobile-gateway')
+const linkedBin = path.join(temporaryDirectory, 'dsh-host-gateway')
 fs.symlinkSync(binPath, linkedBin)
 assert.equal(isMainModule(linkedBin), true)
 const linkedInvocation = spawnSync(process.execPath, [linkedBin, '--help'], { encoding: 'utf8' })

@@ -22,7 +22,7 @@ SOFTWARE.
 
 ---------------------------------------------------------------------------
 The MIT text above is the upstream license of dsh-plugin-mobile-gateway and is
-kept verbatim. dsh-remote-gateway is a fork of it and is distributed under the
+kept verbatim. dsh-host-gateway is a fork of it and is distributed under the
 same MIT terms. Modifications in this fork:
 
 Copyright (c) 2026 johnhom and contributors
