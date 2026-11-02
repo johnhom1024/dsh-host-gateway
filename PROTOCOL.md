@@ -1304,6 +1304,38 @@ DSH Web 的“深度求索中，用时 22 秒 ···”是客户端文案，不�
 - `approval-response` 会直接允许或拒绝等待中的高风险工具操作；只允许经过鉴权的可信设备提交，并按 `rpcId` 和 `approvalId` 防止串用或重复操作
 - 文件下载只允许读取该会话 `cwd` 内的普通文件；移动端必须在写入完成后校验最终块给出的 SHA-256，且不得把 `transferId` 视为可跨连接复用的凭证
 
+### 设备管理端点（`/mgw/devices`）
+
+| 方法与路径 | 作用 | 成功响应 |
+|---|---|---|
+| `GET /mgw/devices` | 列出已配对设备（`id` / `name` / `createdAt` / `lastSeenAt` / `online` / `connections`） | `{ "devices": [ … ] }` |
+| `POST /mgw/devices/<deviceId>/revoke` | 吊销一台设备，并立即断开它的在线连接 | `{ "revoked": true }` |
+| `POST /mgw/pair` | 生成一次性配对码（见 §配对） | `201` + 配对载荷 |
+
+**没有 `DELETE /mgw/devices/<id>`。** 按 REST 习惯用 DELETE 会落到默认分支回
+`{"error":"not-found"}`（`lib/index.mjs:3136` 只认 `POST …/revoke`，兜底 404 在 `:3150`）——
+客户端不要用状态码反推「设备不存在」。
+
+访问控制三条（都在 `lib/index.mjs:2973-2978`）：
+
+- **必须来自回环地址**：`isLoopback()`（`:2204`）只认 `127.0.0.1` / `::1` / `::ffff:127.0.0.1`；
+  否则 403 `{"error":"forbidden","message":"management API is loopback-only"}`。
+  注意容器里经端口映射进来的请求，源地址是网桥 IP，不算回环。
+- **写操作不能带跨站 `Origin`**：非 `GET`/`HEAD` 请求会过 `isSameOrigin()`（`:2353`）——
+  没有 `Origin` 头视为同源（curl 默认如此），有则要求 `new URL(origin).host === Host`；
+  否则 403 `{"error":"forbidden","message":"cross-origin management request rejected"}`。
+- **`adminLoopbackOnly`（默认 `true`）只决定是否强制回环**：设为 `false` 时局域网也能调管理面
+  （沙盒宿主 13082 就是这么配的），但同源检查与设备 token 语义**不变**；生产宿主不要设 `false`。
+
+```sh
+# 列表（只读，GET 不受同源检查影响）
+curl -s http://127.0.0.1:3080/mgw/devices | jq '.devices[] | {id, name, online}'
+
+# 删一台（注意是 POST …/revoke，不是 DELETE）
+curl -s -X POST http://127.0.0.1:3080/mgw/devices/<deviceId>/revoke
+# → {"revoked":true}
+```
+
 ---
 
 ## 16. 版本历史（插件）
