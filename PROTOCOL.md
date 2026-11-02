@@ -727,6 +727,19 @@ WebUI、App 或其他客户端造成的变化通过以下帧主动推送：
 - `session-title-changed` 是 Session 列表级元数据通知，即使客户端正在 `subscribe` 另一个 Session 也会收到。
 - 同一名称变化仍会作为带序号的普通 `event` 帧发给订阅该 Session 的客户端；客户端可按 `seq` 幂等处理。
 
+### `file-resolve` 的 `~` 展开（v1.0.4）
+
+`file-resolve` 的 `path` 若**以 `~` 开头**（`~`、`~/x`、`~\x` 三种），先展开成**宿主当前用户的 home**
+（`os.homedir()`）再按原有流程解析。规矩三条：
+
+- **只展开开头**：`~user/x` 不查用户，`foo/~/bar` 里的 `~` 不展开——两者都保持原来的「按工作区相对路径」语义；
+- **不放开白名单**：展开得到的绝对路径仍要过原有的三道 `isInsideWorkspace` 校验（candidate → realpath → 根别名映射），
+  落在会话工作区外一律 `file-not-allowed`，不新增错误码；
+- **`..` 校验照旧**：展开时余下部分**原样拼接**、不做归一化，所以 `~/../etc/passwd` 仍被既有的 `..` 守卫挡掉（`bad-request`）。
+
+`file-list` / `file-download-open` **不做**二次展开（它们只接受工作区相对路径，拿到的是 `file-resolve` 返回的相对路径）；
+附件通道（`attachment`）与 `file-upload` 与本条无关。
+
 ### `history` 详细
 ```json
 { "type": "history", "sessionId": "session-abc", "maxMessages": 60, "maxBytes": 4194304, "view": "conversation" }
@@ -1342,7 +1355,8 @@ curl -s -X POST http://127.0.0.1:3080/mgw/devices/<deviceId>/revoke
 
 | 版本 | 新增 |
 |---|---|
-| v1.0.3（当前源码） | 实时 `tool/result` 增加 `images?: ImageAttachmentRef[]`（工具返回的图片元数据，不带字节；字节仍走 `attachment` 查询并按会话引用授权）。纯增量：无图时不出现该字段，旧客户端忽略即可；`user/message` / `assistant/message` / 历史视图形状不变 |
+| v1.0.4（当前源码） | `file-resolve` 支持**开头 `~`** 展开成宿主 home（`~` / `~/x` / `~\x`）：余下部分原样拼接、不归一化，展开后仍过三道工作区白名单（工作区外仍 `file-not-allowed`，`~/../…` 仍被 `..` 守卫挡成 `bad-request`）。`~user` 与路径中间的 `~` 不展开；`file-list` / `file-download-open` / 附件通道不受影响。纯增量 |
+| v1.0.3 | 实时 `tool/result` 增加 `images?: ImageAttachmentRef[]`（工具返回的图片元数据，不带字节；字节仍走 `attachment` 查询并按会话引用授权）。纯增量：无图时不出现该字段，旧客户端忽略即可；`user/message` / `assistant/message` / 历史视图形状不变 |
 | v0.12.2 | 实时 `job/registered` 补齐标识字段：`jobId` / `kind` / `label` / `toolCall{callId,rootCallId}` / `startedAt`，与历史侧 `JobRegisteredData` 同名。客户端可在任务**开始**时就结构配对 `jobId ↔ callId`，不再需要解析 shell 启动文案。纯增量：已有帧字段语义不变，旧客户端忽略即可；`job/settled` 同版本内已带完整结算字段 |
 | v0.12.1 | 实时 `job/settled` 补齐工具/任务标识与计时：`jobId` / `kind` / `label` / `toolCall{callId,rootCallId}` / `startedAt` / `finishedAt` / `status` / `cause` / `producerReported` / `detail`，字段名与历史侧 `JobSettledData` 一致，时长由 `finishedAt - startedAt` 得出。纯增量：已有帧字段语义不变，旧客户端忽略新增字段即可 |
 | v0.12.0 | 新增工作区管理：`workspace-rename` / `workspace-delete` 请求、`workspace-renamed` / `workspace-deleted` 回包与 `workspace-manage-v1` 能力；代理 Host `workspace/rename`、`workspace/delete`，错误帧透传 Host 错误码 |

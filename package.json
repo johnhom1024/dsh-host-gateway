@@ -1,6 +1,6 @@
 {
   "name": "dsh-host-gateway",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Remote gateway plugin for DeepSeek Harness — a fork of dsh-plugin-mobile-gateway that adds a whitelisted host-api proxy and structured live job frames.",
   "main": "lib/index.mjs",
   "files": [

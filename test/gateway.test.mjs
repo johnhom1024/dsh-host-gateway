@@ -198,6 +198,16 @@ const fileDownloadRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-mobile-files
 const fileDownloadDir = path.join(fileDownloadRoot, 'builds')
 const fileDownloadBytes = Buffer.alloc(150 * 1024, 0x5a)
 const outsideFile = path.join(os.tmpdir(), `dsh-mobile-outside-${process.pid}.bin`)
+// `~` 展开的用例：工作区必须真的在 home 下，否则「展开后落在工作区内」验不出来
+const homeWorkspace = fs.mkdtempSync(path.join(os.homedir(), '.dsh-gw-tilde-'))
+const homeInsideDir = path.join(homeWorkspace, 'shots')
+fs.mkdirSync(homeInsideDir)
+fs.writeFileSync(path.join(homeInsideDir, 'pic.png'), Buffer.from('fake png bytes for tilde'))
+// home 下、但**不在**这个工作区里：展开后必须仍被白名单挡住
+const homeOutsideFile = path.join(os.homedir(), `.dsh-gw-tilde-outside-${process.pid}.txt`)
+fs.writeFileSync(homeOutsideFile, Buffer.from('outside the home workspace'))
+// `~/…` 形式的输入：`~/<相对 home 的路径>`
+const tildeOf = (absolute) => `~/${path.relative(os.homedir(), absolute).split(path.sep).join('/')}`
 fs.mkdirSync(fileDownloadDir)
 fs.writeFileSync(path.join(fileDownloadDir, 'app-release.apk'), fileDownloadBytes)
 fs.writeFileSync(path.join(fileDownloadRoot, 'guide.pdf'), Buffer.from('%PDF-1.7\nmobile gateway\n'))
@@ -323,6 +333,7 @@ function fakeApi() {
               items: [
                 { sessionId: 's1', cwd: fileDownloadRoot, updatedAt: 1, running: false, blank: false, projections: { asOfSeq: 42, values: { title: '鼓掌 👏 ' + String.fromCharCode(0xd83d) + '…', turnOutline: [{ response: '鼓掌 ' + String.fromCharCode(0xd83d) + '…', prompt: '👏' }] } } },
                 { sessionId: 's2', cwd: fileDownloadRoot, updatedAt: 2, running: false, blank: false },
+                { sessionId: 's-tilde', cwd: homeWorkspace, updatedAt: 3, running: false, blank: false },
               ],
             },
           },
@@ -1141,6 +1152,43 @@ function waitFor(pred, timeout) { return new Promise((res) => { const t0 = Date.
     assert.equal(error.requestType, 'file-resolve')
     assert.equal(error.code, expectedCode)
   }
+  // ---- `~` 展开（1.0.4）：只展开开头，仍过三道工作区白名单 ----
+  {
+    const cases = [
+      // [描述, 输入, 期望]
+      ['tilde inside workspace', tildeOf(path.join(homeInsideDir, 'pic.png')), { kind: 'file-resolved', path: 'shots/pic.png' }],
+      ['tilde alone is home, outside workspace', '~', { kind: 'error', code: 'file-not-allowed' }],
+      ['tilde .. escape is rejected by the existing .. guard', '~/../etc/passwd', { kind: 'error', code: 'bad-request' }],
+      ['tilde user form is not expanded', '~user/x', { kind: 'error', code: 'file-not-found' }],
+      ['tilde in the middle is not expanded', 'foo/~/bar', { kind: 'error', code: 'file-not-found' }],
+      ['tilde missing file inside workspace', tildeOf(path.join(homeInsideDir, 'missing.png')), { kind: 'error', code: 'file-not-found' }],
+      // 安全回归：home 下但在工作区外 → 展开后仍必须被挡（不能因为展开而放开白名单）
+      ['tilde outside workspace stays forbidden', tildeOf(homeOutsideFile), { kind: 'error', code: 'file-not-allowed' }],
+    ]
+    for (const [label, inputPath, expected] of cases) {
+      const requestId = `resolve-tilde-${crypto.randomUUID()}`
+      ws.send(JSON.stringify({ type: 'file-resolve', requestId, sessionId: 's-tilde', path: inputPath }))
+      assert.equal(await waitFor(() => got.some(frame => frame.requestId === requestId), 2000), true, label)
+      const frame = got.find(entry => entry.requestId === requestId)
+      assert.equal(frame.kind, expected.kind, `${label}: kind`)
+      if (expected.kind === 'file-resolved') {
+        assert.equal(frame.path, expected.path, `${label}: workspace-relative path`)
+        assert.equal(frame.size, fs.statSync(path.join(homeInsideDir, 'pic.png')).size, `${label}: size`)
+        // 注意：`fileMediaType()` 目前不映射图片扩展名，`.png` 会回 application/octet-stream；
+        // 本笔只管路径展开，不顺手改媒体类型判定（那是另一件事）。
+      } else {
+        assert.equal(frame.code, expected.code, `${label}: error code`)
+        assert.equal(frame.requestType, 'file-resolve', `${label}: requestType`)
+      }
+    }
+    // 绝对路径回归：同一张工作区外的 home 文件，用绝对路径也必须是 file-not-allowed
+    const requestId = `resolve-abs-outside-${crypto.randomUUID()}`
+    ws.send(JSON.stringify({ type: 'file-resolve', requestId, sessionId: 's-tilde', path: homeOutsideFile }))
+    assert.equal(await waitFor(() => got.some(frame => frame.requestId === requestId), 2000), true)
+    assert.equal(got.find(entry => entry.requestId === requestId).code, 'file-not-allowed')
+  }
+  interactionResults.push(['tilde paths expand to home but stay inside the workspace whitelist', true])
+
   interactionResults.push(['file references resolve native paths and reject unsafe targets', true])
 
   ws.send(JSON.stringify({ type: 'file-download-open', requestId: 'download-1', sessionId: 's1', path: 'builds/app-release.apk' }))
