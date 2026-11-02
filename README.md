@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/whale-girl-ios-app-promo-16x9.png" alt="DeepSeek Harness Mobile 与移动网关" width="100%">
+  <img src="https://raw.githubusercontent.com/johnhom1024/dsh-host-gateway/main/docs/assets/whale-girl-ios-app-promo-16x9.png" alt="DeepSeek Harness Mobile 与移动网关" width="100%">
 </p>
 
 # dsh-host-gateway
@@ -13,6 +13,8 @@
 > **从旧包迁移**：包名已改为 `dsh-host-gateway`，`dsh.profile.bundles` 要跟着换名；步骤见 [MIGRATION.md](MIGRATION.md)——补丁行 `id: mobile-gateway`、`deviceFile`、已配对设备都不受影响。
 >
 > **安装**：`dsh plugin --profile web add github:johnhom1024/dsh-host-gateway`
+>
+> **发布**：`1.0.0` 是首个公开发布版本（npm：`dsh-host-gateway`）。
 
 DeepSeek Harness 的设备鉴权移动网关，支持会话与实时事件、排队消息同步及编辑/删除/Steer、Session 归档和重命名的双向同步、停止当前生成并稍后继续、任务列表和当前 Goal 同步及管理、服务端驱动的命令和技能菜单、Human-in-the-loop、图片及文件传输。安装后，Harness WebUI 左侧边栏会出现“移动设备”入口，可直接开启网关、生成配对二维码和管理可信设备。
 
@@ -134,7 +136,23 @@ endpoints:
 
 前提：已经安装 `dsh` CLI 和 `pnpm`，并能正常启动 `dsh web`。可先执行 `pnpm --version` 确认当前用户的环境能够找到 `pnpm`。
 
-局域网使用只需安装插件：
+### 三条安装通道（按需选一条）
+
+插件是**在 DSH 进程内加载**的，所以**安装或升级后都必须重启 DSH**（`dsh web` / 桌面端 App）才会生效。
+
+| 通道 | 命令 | 适用场景 |
+|---|---|---|
+| **npm 包名** | `dsh plugin --profile web add dsh-host-gateway` | 常规安装，跟随 npm 上的最新已发布版本 |
+| **GitHub 源码** | `dsh plugin --profile web add github:johnhom1024/dsh-host-gateway` | 想直接跟仓库 `main`，不等 npm 发版 |
+| **本地 tgz** | `dsh plugin --profile web add file:/绝对路径/dsh-host-gateway-<version>.tgz` | 内网 / 离线环境，或要锁定某个已验收的包 |
+
+npm 通道注意两点：
+
+- 本机默认 registry 常被设成只读镜像（如 `npmmirror`），镜像可能滞后；要官方源的版本可显式指定：
+  `dsh plugin --profile web add --registry=https://registry.npmjs.org dsh-host-gateway`（具体参数以当前 `dsh plugin` 版本为准）。
+- 本包在 `package.json` 里写了 `publishConfig.registry = https://registry.npmjs.org`，这是给**发布者**用的；安装端仍按各自 registry 配置解析。
+
+局域网使用只需安装插件（下面是 GitHub 通道，等价于上表第二行）：
 
 ```bash
 dsh plugin --profile web add github:johnhom1024/dsh-host-gateway
@@ -221,7 +239,7 @@ http://127.0.0.1:<本地端口>
 打开左侧的“移动设备”，在“公网接入”填写云厂商控制台提供的公网 IPv4，然后点击“配置公网接入”或“更新公网配置”。Helper 会自动读取当前 `dsh web` 端口并配置 Nginx、TLS 证书和 `wss://<公网 IP>/ws/mobile`。
 
 <p align="center">
-  <img src="docs/assets/public-access-ui.png" alt="在移动设备面板配置公网接入" width="420">
+  <img src="https://raw.githubusercontent.com/johnhom1024/dsh-host-gateway/main/docs/assets/public-access-ui.png" alt="在移动设备面板配置公网接入" width="420">
 </p>
 
 ### 5. 配对移动设备

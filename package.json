@@ -1,15 +1,17 @@
 {
   "name": "dsh-host-gateway",
-  "version": "1.0.4",
-  "description": "Remote gateway plugin for DeepSeek Harness — a fork of dsh-plugin-mobile-gateway that adds a whitelisted host-api proxy and structured live job frames.",
+  "version": "1.0.0",
+  "description": "DeepSeek Harness 宿主网关插件：把会话、文件与附件通过 WebSocket 暴露给移动端与远程 WebUI，含白名单 host-api 代理与实时任务帧。",
   "main": "lib/index.mjs",
   "files": [
-    "bin",
-    "helper",
-    "lib",
-    "docs",
+    "lib/",
+    "bin/",
+    "helper/",
     "cordis.patch.yml",
-    "PROTOCOL.md"
+    "PROTOCOL.md",
+    "NOTICE",
+    "MIGRATION.md",
+    "docs/*.md"
   ],
   "repository": {
     "type": "git",
@@ -18,6 +20,18 @@
   "homepage": "https://github.com/johnhom1024/dsh-host-gateway#readme",
   "bugs": {
     "url": "https://github.com/johnhom1024/dsh-host-gateway/issues"
+  },
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "gateway",
+    "websocket",
+    "remote",
+    "mobile",
+    "agent"
+  ],
+  "engines": {
+    "node": ">=20.3.0"
   },
   "dependencies": {
     "@deepseek-ai/schemastery": "^3.18.1",
@@ -45,6 +59,10 @@
         "@deepseek-ai/dsh-client-ui-sidebar"
       ]
     }
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org",
+    "access": "public"
   },
   "license": "MIT"
 }

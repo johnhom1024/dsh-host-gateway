@@ -1355,8 +1355,7 @@ curl -s -X POST http://127.0.0.1:3080/mgw/devices/<deviceId>/revoke
 
 | 版本 | 新增 |
 |---|---|
-| v1.0.4（当前源码） | `file-resolve` 支持**开头 `~`** 展开成宿主 home（`~` / `~/x` / `~\x`）：余下部分原样拼接、不归一化，展开后仍过三道工作区白名单（工作区外仍 `file-not-allowed`，`~/../…` 仍被 `..` 守卫挡成 `bad-request`）。`~user` 与路径中间的 `~` 不展开；`file-list` / `file-download-open` / 附件通道不受影响。纯增量 |
-| v1.0.3 | 实时 `tool/result` 增加 `images?: ImageAttachmentRef[]`（工具返回的图片元数据，不带字节；字节仍走 `attachment` 查询并按会话引用授权）。纯增量：无图时不出现该字段，旧客户端忽略即可；`user/message` / `assistant/message` / 历史视图形状不变 |
+| v1.0.0（首个公开发布） | ① 实时 `tool/result` 增加 `images?: ImageAttachmentRef[]`（工具返回的图片元数据，不带字节；字节仍走 `attachment` 查询并按会话引用授权）——纯增量，无图时不出现该字段，旧客户端忽略即可。② `file-resolve` 支持**开头 `~`** 展开成宿主 home（`~` / `~/x` / `~\x`）：余下部分原样拼接、不归一化，展开后仍过三道工作区白名单（工作区外仍 `file-not-allowed`，`~/../…` 仍被 `..` 守卫挡成 `bad-request`）；`~user` 与路径中间的 `~` 不展开，`file-list` / `file-download-open` / 附件通道不受影响 |
 | v0.12.2 | 实时 `job/registered` 补齐标识字段：`jobId` / `kind` / `label` / `toolCall{callId,rootCallId}` / `startedAt`，与历史侧 `JobRegisteredData` 同名。客户端可在任务**开始**时就结构配对 `jobId ↔ callId`，不再需要解析 shell 启动文案。纯增量：已有帧字段语义不变，旧客户端忽略即可；`job/settled` 同版本内已带完整结算字段 |
 | v0.12.1 | 实时 `job/settled` 补齐工具/任务标识与计时：`jobId` / `kind` / `label` / `toolCall{callId,rootCallId}` / `startedAt` / `finishedAt` / `status` / `cause` / `producerReported` / `detail`，字段名与历史侧 `JobSettledData` 一致，时长由 `finishedAt - startedAt` 得出。纯增量：已有帧字段语义不变，旧客户端忽略新增字段即可 |
 | v0.12.0 | 新增工作区管理：`workspace-rename` / `workspace-delete` 请求、`workspace-renamed` / `workspace-deleted` 回包与 `workspace-manage-v1` 能力；代理 Host `workspace/rename`、`workspace/delete`，错误帧透传 Host 错误码 |
