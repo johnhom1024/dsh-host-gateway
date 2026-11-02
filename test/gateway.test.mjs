@@ -564,6 +564,19 @@ function waitFor(pred, timeout) { return new Promise((res) => { const t0 = Date.
   assert.equal(got.find(frame => frame.seq === 9000).event.error.reason, 'permission denied')
   assert.equal(got.find(frame => frame.seq === 9001).event.stream[0].type, 'chunk')
   assert.equal(got.find(frame => frame.seq === 9001).event.finish.failure.status, 429)
+  // 2026-11-02（C 第一笔）：tool/result 里工具返回的图片，走 wire 帧的 `images` 元数据；
+  // 字节仍然靠 {type:'attachment'} 查询，帧里一个 base64 都不带。
+  listeners['session/event']({ id: 's1' }, { type: 'tool/result', seq: 9010, time: 6, data: {
+    turn: 1, step: 0, message: { role: 'tool', source: { kind: 'tool', callId: 'img-call' }, toolCallId: 'img-call',
+      content: [{ type: 'tool-result', content: [{ type: 'text', text: 'read image' }, { type: 'image', attachment: {
+        attachmentId: 'sha256:' + 'b'.repeat(64), mediaType: 'image/png', bytes: 5013, width: 778, height: 44, name: 'shot.png' } }] }] },
+  } })
+  assert.equal(await waitFor(() => got.some(frame => frame.seq === 9010), 2000), true)
+  const imageFrame = got.find(frame => frame.seq === 9010)
+  assert.deepEqual(imageFrame.event.images, [{ attachmentId: 'sha256:' + 'b'.repeat(64), mediaType: 'image/png',
+    bytes: 5013, width: 778, height: 44, name: 'shot.png' }])
+  assert.equal(imageFrame.event.preview, 'read image')
+  assert.equal(JSON.stringify(imageFrame).length < 800, true, '图片只发元数据，帧体积不随图片大小增长')
   const retry = { turn: 1, step: 0, retryId: 'retry-1', provider: 'deepseek', mode: 'normal',
     retry: 1, maxRetries: 5, delayMs: 1000, failure: { message: 'Rate limited', code: 'RATE_LIMIT', status: 429 } }
   listeners['session/event']({ id: 's1' }, { type: 'llm/retry', seq: 9002, time: 3, data: retry })

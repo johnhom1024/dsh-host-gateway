@@ -1229,7 +1229,7 @@ Control/旧单连接接收全局模式状态增量，不受所订阅会话过滤
 - `session/title` → `{title, source?}`
 - `tool/call` → `{turn, step, callId, name, arguments}`
 - `deliverables/presented` → `{turn, callId, files: [{path, description?}]}`，用于本轮回复下方的文件卡片。
-- `tool/result` → `{turn, step, callId, isError, preview(≤400字符), output, outputTruncated, error?}`
+- `tool/result` → `{turn, step, callId, isError, preview(≤400字符), output, outputTruncated, error?, images?: ImageAttachmentRef[]}`
 - `turn/start|end` / `step/start|end` → `{turn, step, reason?, reasonDetails?}`，保留原有 `reason` 字符串；`reasonDetails` 提供结构化终态错误或取消来源。
 - `llm/retry` → `{turn, step, retryId, retry, maxRetries?, delayMs, provider, mode, failure}`。
 - `llm/retry-started` → `{turn, step, retryId, retry}`。
@@ -1243,6 +1243,21 @@ Control/旧单连接接收全局模式状态增量，不受所订阅会话过滤
 提供 `durationMs`，避免两个真值。`status` 取值 `completed | killed | failed`，`cause` 取值
 `producer | kill | teardown`；`killed` 是**正常存在的第三种结果**（用户取消或会话归档），客户端应显示为
 「已停止」而不是完成、也不是失败。
+
+`tool/result` 的 `images`（v1.0.3 起，纯增量）：工具返回的图片（例如 `read_image`）是宿主侧的**不可变附件**，
+`images` 只带元数据、**不带字节**：
+
+```json
+{ "images": [ { "attachmentId": "sha256:95b7f93d…2c512", "mediaType": "image/png",
+                "bytes": 5013, "width": 778, "height": 44, "name": "shot.png" } ] }
+```
+
+- `ImageAttachmentRef` 就是 `user/message.images` 用的同一形状；`name` 可缺省，其余字段必有。
+- 取字节仍走 `{ "type": "attachment", "sessionId", "attachmentId" }` → `{ kind: "attachment", attachment, data }`。
+  宿主按「该 `attachmentId` 被本会话日志引用过」授权，否则 `session/attachment-invalid`（`ATTACHMENT_NOT_REFERENCED`）。
+  这一点很重要：**网关不做任何文件路径读取**，所以工作区白名单问题在这条通道上不存在。
+- 没有图片时**不出现该字段**（不是空数组）；旧客户端忽略它即可，帧的其他字段与 v1.0.2 完全一致。
+
 
 三个共同约定：
 
@@ -1295,7 +1310,8 @@ DSH Web 的“深度求索中，用时 22 秒 ···”是客户端文案，不�
 
 | 版本 | 新增 |
 |---|---|
-| v0.12.2（当前源码） | 实时 `job/registered` 补齐标识字段：`jobId` / `kind` / `label` / `toolCall{callId,rootCallId}` / `startedAt`，与历史侧 `JobRegisteredData` 同名。客户端可在任务**开始**时就结构配对 `jobId ↔ callId`，不再需要解析 shell 启动文案。纯增量：已有帧字段语义不变，旧客户端忽略即可；`job/settled` 同版本内已带完整结算字段 |
+| v1.0.3（当前源码） | 实时 `tool/result` 增加 `images?: ImageAttachmentRef[]`（工具返回的图片元数据，不带字节；字节仍走 `attachment` 查询并按会话引用授权）。纯增量：无图时不出现该字段，旧客户端忽略即可；`user/message` / `assistant/message` / 历史视图形状不变 |
+| v0.12.2 | 实时 `job/registered` 补齐标识字段：`jobId` / `kind` / `label` / `toolCall{callId,rootCallId}` / `startedAt`，与历史侧 `JobRegisteredData` 同名。客户端可在任务**开始**时就结构配对 `jobId ↔ callId`，不再需要解析 shell 启动文案。纯增量：已有帧字段语义不变，旧客户端忽略即可；`job/settled` 同版本内已带完整结算字段 |
 | v0.12.1 | 实时 `job/settled` 补齐工具/任务标识与计时：`jobId` / `kind` / `label` / `toolCall{callId,rootCallId}` / `startedAt` / `finishedAt` / `status` / `cause` / `producerReported` / `detail`，字段名与历史侧 `JobSettledData` 一致，时长由 `finishedAt - startedAt` 得出。纯增量：已有帧字段语义不变，旧客户端忽略新增字段即可 |
 | v0.12.0 | 新增工作区管理：`workspace-rename` / `workspace-delete` 请求、`workspace-renamed` / `workspace-deleted` 回包与 `workspace-manage-v1` 能力；代理 Host `workspace/rename`、`workspace/delete`，错误帧透传 Host 错误码 |
 | v0.10.4 | 精简 `sessions` 列表投影，仅保留 `asOfSeq` 和 `values.title`，修复大量会话通过公网隧道传输时超时的问题；保留会话元信息和历史完整投影，现有移动客户端无需配套修改 |
