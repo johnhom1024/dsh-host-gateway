@@ -119,12 +119,32 @@ try {
     if (state.card && state.pill && state.pill !== 'loading') break
     await wait(250)
   }
-  const final = await evaluate(`(() => ({
-    pill: document.querySelector('.mgw-pill')?.getAttribute('data-state') ?? null,
-    cards: [...document.querySelectorAll('[data-mgw-card]')].map((el) => el.getAttribute('data-mgw-card')),
-    overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
-  }))()`)
+  const final = await evaluate(`(() => {
+    const nav = document.querySelector('.mgw-nav')
+    const content = document.querySelector('.mgw-content')
+    const tabs = [...document.querySelectorAll('.mgw-nav button')]
+    const nrect = nav?.getBoundingClientRect()
+    const crect = content?.getBoundingClientRect()
+    return {
+      pill: document.querySelector('.mgw-pill')?.getAttribute('data-state') ?? null,
+      cards: [...document.querySelectorAll('[data-mgw-card]')].map((el) => el.getAttribute('data-mgw-card')),
+      overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      nav: nav ? {
+        direction: getComputedStyle(nav).flexDirection,
+        navBottom: nrect.bottom,
+        contentTop: crect?.top ?? null,
+        sameRow: new Set(tabs.map((t) => Math.round(t.getBoundingClientRect().top))).size === 1,
+        tabScroll: nav.scrollWidth - nav.clientWidth,
+      } : null,
+    }
+  })()`)
   if (final.overflow > 0) throw new Error(`horizontal overflow at ${WIDTH}: +${final.overflow}px`)
+  if (final.nav) {
+    console.log(`readings: nav=${final.nav.direction} navBottom=${final.nav.navBottom} contentTop=${final.nav.contentTop} sameRow=${final.nav.sameRow} tabScroll=${final.nav.tabScroll} pageOverflow=${final.overflow}`)
+    if (final.nav.direction !== 'row') throw new Error(`nav not horizontal: ${final.nav.direction}`)
+    if (final.nav.contentTop !== null && final.nav.navBottom > final.nav.contentTop) throw new Error('nav is not above content')
+    if (!final.nav.sameRow) throw new Error('tabs are not on one row')
+  }
   if (!OUT) throw new Error('unreachable')
   mkdirSync(dirname(OUT), { recursive: true })
   const shot = await send('Page.captureScreenshot', { format: 'png' })
