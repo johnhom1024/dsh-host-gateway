@@ -5,7 +5,7 @@
 
 ## check-104-panel-restyle.mjs
 
-静态源码门禁，48 条断言，四组：
+静态源码门禁，51 条断言，四组：
 
 - **A. slot 拓扑 = portal 同构**（2026-11-08 打回反转）：`sidebar.panellist`（入口，
   id=PANEL_ID，order 90）与 `main`（主内容页，key=PANEL_ID）各恰一次且同值
@@ -31,13 +31,14 @@ node docs/evidence/check-104-panel-restyle.mjs --self-test  # 负向，全部命
 
 | mutant | 变异 | 命中目标 |
 | --- | --- | --- |
-| A-删pill | pill 元素与钩子移除 | B 组区块断言 |
-| B-挂错slot | `sidebar.panellist` → `sidebar.footer.action`（回退旧入口） | A 组挂载点断言 |
-| C-删词条 | 删 `"运行中": "Running"` EN 词条 | C 组 i18n 断言 |
-| D-注入后端 | 源码注入 `/mgw/password` 字符串 | D 组纯度断言 |
-| E-塞回工具按钮 | 向 headerTop 塞回齿轮按钮 + setToolsOpen | B5/B6「工具已移除」断言 |
-| F-nav改回竖排 | nav flex-direction 改回 column | B7「水平 tab」断言 |
-| G-塞回安装tab | nav 塞回 install + INSTALL_SHOTS 常量 | B10/B11「安装 tab 已删」断言 |
+| A-删pill | pill 元素与钩子移除 | B2（实测命中） |
+| B-挂错slot | `sidebar.panellist` → `sidebar.footer.action`（回退旧入口） | A2/A4（实测命中） |
+| C-删词条 | 删 `"运行中": "Running"` EN 词条 | C1/C2（实测命中） |
+| D-注入后端 | 源码注入 `/mgw/password` 字符串 | D1（实测命中） |
+| E-塞回工具按钮 | 向 headerTop 塞回齿轮按钮 + setToolsOpen | B5/C1（实测命中） |
+| F-nav改回竖排 | nav flex-direction 改回 column | B7（实测命中） |
+| G-塞回安装tab | nav 塞回 install + **自足注入** `const INSTALL_SHOTS=[]` | B10/B11/B12/C1（实测命中） |
+| H-塞回下拉 | 向 mode 卡塞回 GatewaySelect 三档下拉 | B14（实测命中） |
 
 B5/B6（feat/remove-tools-menu 新增）：header 不再渲染齿轮「工具」按钮，toolsMenu/
 runTool/toolsOpen/toolBusy/toolNotice/stoppedRef 全部死代码清零；D2 通道清单同步
@@ -47,6 +48,12 @@ B10/B11/B12（feat/remove-install-tab）：nav 只剩三个 tab；InstallGuide �
 RELEASES_LATEST/TESTFLIGHT_*/INSTALL_SHOTS 常量、三个 install state、GitHub
 Release 拉取 useEffect、19 个安装类词条（EN+JA 38 行）全部清零；负向 mutant G
 （塞回安装 tab + 常量）命中 B10/B11，EXIT 1。
+
+B13/B14/B15（feat/mode-toggle）：mode 卡 chip 换成 role=switch 开关
+（`data-mgw-mode-switch`，开=persistent / 关=disabled），三档 GatewaySelect
+下拉删除，「临时开启」「常驻开启」「关闭」词条（EN/JA）删净，新增
+「开启/关闭网关运行模式」title 词条；temporary 仅后端保留，当前临时态时
+开关如实显示为开、描述行照旧倒计时。B14 抓 mutant H。
 
 B7/B8/B9（同分支第二笔）：nav 为 portal 水平 tab 条（flex-direction: row +
 nowrap + overflow-x:auto），mgw-body 纵向（tab 上内容下），选中态 accent 下划线。
