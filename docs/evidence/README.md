@@ -47,7 +47,8 @@ runTool/toolsOpen/toolBusy/toolNotice/stoppedRef 全部死代码清零；D2 通�
 B10/B11/B12（feat/remove-install-tab）：nav 只剩三个 tab；InstallGuide 组件、
 RELEASES_LATEST/TESTFLIGHT_*/INSTALL_SHOTS 常量、三个 install state、GitHub
 Release 拉取 useEffect、19 个安装类词条（EN+JA 38 行）全部清零；负向 mutant G
-（塞回安装 tab + 常量）命中 B10/B11，EXIT 1。
+初版锚定已删常量（no-op，漏 B11），feat/mode-toggle 笔改为自足注入
+`const INSTALL_SHOTS=[]` 后实测命中 B10/B11/B12/C1（EXIT 1）。
 
 B13/B14/B15（feat/mode-toggle）：mode 卡 chip 换成 role=switch 开关
 （`data-mgw-mode-switch`，开=persistent / 关=disabled），三档 GatewaySelect
