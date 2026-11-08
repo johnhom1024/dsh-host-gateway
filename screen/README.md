@@ -17,6 +17,9 @@ id=dsh-host-gateway，order 90）+ `main`（主内容页，key 同值 = 壳的 p
 | `mobile/panel-restyle_002-after-390.png` | 历史：纯视觉改版后 390×844 @3x |
 | `mobile/panel-restyle_003-page-390.png` | **本笔交付**：slot 迁移后 390×844 @3x，无横向溢出（截图脚本断言 `scrollWidth - clientWidth ≤ 0`） |
 
+| `pc/panel-restyle_004-no-tools-1440.png` | 移除 header 齿轮「工具」按钮及下拉菜单后（1440×900 @2x，header 只剩 pill） |
+| `mobile/panel-restyle_004-no-tools-390.png` | 同上 390×844 @3x |
+
 采集方式（真实后端 + 真实 client.js，仅 DSH 壳层是 stub）：
 
 ```sh

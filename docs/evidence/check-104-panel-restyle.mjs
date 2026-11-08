@@ -53,6 +53,8 @@ function blocks(src) {
     ok(`B3 卡片 data-mgw-card=${card}`, src.includes(`'data-mgw-card': '${card}'`), 'portal 卡片化区块')
   }
   ok('B4 chip 带色调档', src.includes("[data-tone=\"ok\"]") && src.includes("[data-tone=\"warn\"]"), 'ok/warn 两档 chip')
+  ok('B5 header 不再渲染工具按钮', !src.includes("title: tr('工具')") && !src.includes("styles.toolsMenu") && !src.includes('runTool') && !src.includes('setToolsOpen'), '齿轮/菜单/runTool 全部移除')
+  ok('B6 工具菜单死代码清零', !src.includes('toolsOpen') && !src.includes('toolBusy') && !src.includes('toolNotice') && !src.includes('stoppedRef') && !src.includes("data-mgw-alert': 'tool'"), '状态/副作用/展示块不留死代码')
 }
 
 function i18n(src) {
@@ -77,7 +79,8 @@ function purity(src) {
   for (const banned of ['/mgw/password', 'passwordArmed', 'needs-password', 'createPasswordGate', 'password-gate']) {
     ok(`D1 无后端语义「${banned}」`, !src.includes(banned), '本轮是纯呈现层，密码门后端已另档存放')
   }
-  for (const channel of ['/mgw/status', '/mgw/devices', '/mgw/public-setup', '/mgw/tools/', '/mgw/gateway', '/mgw/auth', '/mgw/cloudflare', '/mgw/pair']) {
+  // /mgw/tools 后端端点原样保留，但前端入口（齿轮菜单）已移除，不再计入前端通道清单。
+  for (const channel of ['/mgw/status', '/mgw/devices', '/mgw/public-setup', '/mgw/gateway', '/mgw/auth', '/mgw/cloudflare', '/mgw/pair']) {
     ok(`D2 数据通道保留「${channel}」`, src.includes(channel), '功能零变化')
   }
 }
@@ -114,12 +117,15 @@ if (!SELF) {
   const a = mutate('A-删pill', (src) => src.replace("'data-mgw-pill': '1'", "'data-x': '1'").replace(/className: 'mgw-pill',/, "className: 'mgw-hidden',"))
   const b = mutate('B-挂错slot', (src) => src.replace("slots.inject('sidebar.panellist'", "slots.inject('sidebar.footer.action'"))
   const c = mutate('C-删词条', (src) => src.replace('  "运行中": "Running",\n', ''))
+  const e = mutate('E-塞回工具按钮', (src) => src.replace("React.createElement('span', { className: 'mgw-pill-dot' }), pillText)),",
+    `React.createElement('span', { className: 'mgw-pill-dot' }), pillText),
+            React.createElement('button', { type: 'button', title: tr('工具'), 'aria-label': tr('工具'), onClick: () => setToolsOpen(true) }, 'gear'))))`))
   const d = mutate('D-注入后端', (src) => src.replace("'use strict'", "'use strict'; const mgwProbe = '/mgw/password';") === source ? src.replace("window.__ModuleLoader__.load({", "window.__ModuleLoader__.load({\n  // probe: /mgw/password") : src)
-  const results = { A: a, B: b, C: c, D: d }
+  const results = { A: a, B: b, C: c, E: e, D: d }
   if (Object.values(results).some((v) => v === null)) {
     if (!process.exitCode) process.exitCode = 3
   } else if (Object.values(results).every((v) => v > 0)) {
-    console.log(`✅ check-104 --self-test：4 个 mutant 全部被门禁抓住（负向通过）`)
+    console.log(`✅ check-104 --self-test：5 个 mutant 全部被门禁抓住（负向通过）`)
     process.exit(1)
   } else {
     console.error(`❌ check-104 --self-test：有 mutant 逃脱（${JSON.stringify(results)}）`)
