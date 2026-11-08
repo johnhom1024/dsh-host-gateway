@@ -20,6 +20,9 @@ id=dsh-host-gateway，order 90）+ `main`（主内容页，key 同值 = 壳的 p
 | `pc/panel-restyle_004-no-tools-1440.png` | 移除 header 齿轮「工具」按钮及下拉菜单后（1440×900 @2x，header 只剩 pill） |
 | `mobile/panel-restyle_004-no-tools-390.png` | 同上 390×844 @3x |
 
+| `pc/panel-restyle_005-tabs-1440.png` | nav 改 portal 水平 tab 条（accent 下划线选中），1440×900 @2x |
+| `mobile/panel-restyle_005-tabs-390.png` | 同上 390×844 @3x，tab 条不换行可横滚、页面级溢出 0 |
+
 采集方式（真实后端 + 真实 client.js，仅 DSH 壳层是 stub）：
 
 ```sh
