@@ -56,6 +56,9 @@ function blocks(src) {
   ok('B5 header 不再渲染工具按钮', !src.includes("title: tr('工具')") && !src.includes("styles.toolsMenu") && !src.includes('runTool') && !src.includes('setToolsOpen'), '齿轮/菜单/runTool 全部移除')
   ok('B7 nav 水平 tab 条布局', /\.mgw-nav \{[^}]*flex-direction: row/.test(src) && /\.mgw-nav \{[^}]*flex-wrap: nowrap/.test(src) && /\.mgw-nav \{[^}]*overflow-x: auto/.test(src), 'portal tabbar：行内排列、不换行、可横滚')
   ok('B8 mgw-body 纵向（tab 上内容下）', /\.mgw-body \{[^}]*flex-direction: column/.test(src) && !src.includes('grid-template-columns: 180px'), '不再左栏竖排双栏')
+  ok('B10 nav 只剩三个 tab（无安装应用）', src.includes("['general', tr('通用设置')], ['pairing', tr('连接与配对')], ['devices', tr('可信设备')]]") && !src.includes("['install', tr('安装应用')]") && !src.includes("activeSection !== 'install'"), 'install tab 与面板块已删')
+  ok('B11 安装引导零残留', !src.includes('InstallGuide') && !src.includes('RELEASES_LATEST') && !src.includes('TESTFLIGHT_URL') && !src.includes('TESTFLIGHT_APP_URL') && !src.includes('INSTALL_SHOTS') && !src.includes('api.github.com') && !src.includes('installRelease') && !src.includes('installLoading') && !src.includes('installPlatform'), '组件/常量/state/Release 拉取全部移除')
+  ok('B12 安装类词条清零', !src.includes('安装应用') && !src.includes('TestFlight') && !src.includes('APK') && !src.includes('Whaleness') && !src.includes('最新版本'), 'EN/JA 两套词条删净')
   ok('B9 tab 选中下划线', src.includes('.mgw-nav button[aria-current="page"]') && /\.mgw-nav button\[aria-current="page"\] \{[^}]*border-bottom-color/.test(src), 'portal 的 accent 下划线选中')
   ok('B6 工具菜单死代码清零', !src.includes('toolsOpen') && !src.includes('toolBusy') && !src.includes('toolNotice') && !src.includes('stoppedRef') && !src.includes("data-mgw-alert': 'tool'"), '状态/副作用/展示块不留死代码')
 }
@@ -125,11 +128,14 @@ if (!SELF) {
             React.createElement('button', { type: 'button', title: tr('工具'), 'aria-label': tr('工具'), onClick: () => setToolsOpen(true) }, 'gear'))))`))
   const d = mutate('D-注入后端', (src) => src.replace("'use strict'", "'use strict'; const mgwProbe = '/mgw/password';") === source ? src.replace("window.__ModuleLoader__.load({", "window.__ModuleLoader__.load({\n  // probe: /mgw/password") : src)
   const f = mutate('F-nav改回竖排', (src) => src.replace('flex-direction: row; flex-wrap: nowrap;', 'flex-direction: column;'))
-  const results = { A: a, B: b, C: c, E: e, F: f, D: d }
+  const g = mutate('G-塞回安装tab', (src) => src
+    .replace("['devices', tr('可信设备')]]", "['devices', tr('可信设备')], ['install', tr('安装应用')]]")
+    .replace("const RELEASES_LATEST", "const INSTALL_SHOTS = {}\n    const RELEASES_LATEST"))
+  const results = { A: a, B: b, C: c, E: e, F: f, G: g, D: d }
   if (Object.values(results).some((v) => v === null)) {
     if (!process.exitCode) process.exitCode = 3
   } else if (Object.values(results).every((v) => v > 0)) {
-    console.log(`✅ check-104 --self-test：6 个 mutant 全部被门禁抓住（负向通过）`)
+    console.log(`✅ check-104 --self-test：7 个 mutant 全部被门禁抓住（负向通过）`)
     process.exit(1)
   } else {
     console.error(`❌ check-104 --self-test：有 mutant 逃脱（${JSON.stringify(results)}）`)
