@@ -153,13 +153,10 @@ const mount = async () => {
     effect: (fn) => fn(),
     slots,
   })
-  const Footer = captured['sidebar.footer.action:mobile-gateway-devices']
-  const Overlay = captured['shell.overlay:mobile-gateway-devices-panel']
-  if (!Footer || !Overlay) throw new Error('panel slots missing after apply: ' + Object.keys(captured).join(', '))
+  const Page = captured['main:dsh-host-gateway']
+  if (!Page) throw new Error('panel main slot missing after apply: ' + Object.keys(captured).join(', '))
   const root = createRoot(document.getElementById('root'))
-  root.render(React.createElement(React.Fragment, null,
-    React.createElement('div', { 'data-mgw-hostbar': '1' }, React.createElement(Footer, { wide: true })),
-    React.createElement(Overlay)))
+  root.render(React.createElement(Page))
   window.__panelReady = true
 }
 mount()

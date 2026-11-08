@@ -1,16 +1,21 @@
 # 视觉证据索引
 
-## 面板 UI 改版（feat/gateway-panel-restyle，check-104）
+## 面板 UI 改版 + slot 迁移（feat/gateway-panel-restyle，check-104）
 
-参照 dsh-remote-portal 的面板视觉规格（卡片化区块 + 状态 pill + chip + alert）重排
-`lib/client.js` DevicePanel 的呈现层；slot 摆放与模块 id 不变，数据通道零变化。
+两步走：`002` 是纯视觉改版（portal 规格卡片/pill/chip，仍挂旧 slot 浮层）；
+`003` 是 slot 拓扑向 portal（dsh-remote-portal）对齐——`sidebar.panellist`（入口，
+id=dsh-host-gateway，order 90）+ `main`（主内容页，key 同值 = 壳的 page-switch 契约），
+旧 `sidebar.footer.action` 入口与 `shell.overlay` 注册移除（浮层类内容只剩配对二维码，
+照 portal 的 QR-in-panel 语义留在面板内部）。视觉规格两步共用，数据通道零变化。
 
 | 文件 | 说明 |
 | --- | --- |
-| `pc/panel-restyle_001-before-1440.png` | 改版前 1440×900 @2x：旧版分隔线式区块、22px 大标题、无状态 pill |
-| `pc/panel-restyle_002-after-1440.png` | 改版后 1440×900 @2x：标题 + 运行中 pill 同行、卡片化区块（mode/auth/pairing/cloudflare/devices 带 chip） |
-| `mobile/panel-restyle_001-before-390.png` | 改版前 390×844 @3x |
-| `mobile/panel-restyle_002-after-390.png` | 改版后 390×844 @3x：无横向溢出（截图脚本断言 `scrollWidth - clientWidth ≤ 0`） |
+| `pc/panel-restyle_001-before-1440.png` | 历史：改版前 1440×900 @2x（cc59a7f，分隔线式区块、22px 大标题、footer 浮层入口） |
+| `pc/panel-restyle_002-after-1440.png` | 历史：纯视觉改版后（卡片化 + pill，仍在旧 slot 浮层） |
+| `pc/panel-restyle_003-page-1440.png` | **本笔交付**：slot 迁移后 1440×900 @2x，main 页面直出（h1 + pill 行 + subtitle + nav/内容双栏） |
+| `mobile/panel-restyle_001-before-390.png` | 历史：改版前 390×844 @3x |
+| `mobile/panel-restyle_002-after-390.png` | 历史：纯视觉改版后 390×844 @3x |
+| `mobile/panel-restyle_003-page-390.png` | **本笔交付**：slot 迁移后 390×844 @3x，无横向溢出（截图脚本断言 `scrollWidth - clientWidth ≤ 0`） |
 
 采集方式（真实后端 + 真实 client.js，仅 DSH 壳层是 stub）：
 

@@ -3,8 +3,8 @@
  * check-104：面板 UI 改版（feat/gateway-panel-restyle）取证门禁。
  *
  * 断言四组：
- *   A. slot 挂载点不变 —— sidebar.footer.action + shell.overlay 各恰一次，
- *      模块 id 仍是 dsh-host-gateway，注册 id 不变；
+ *   A. slot 拓扑 = portal 同构：panellist + main 已注册、footer.action 与
+ *      overlay 旧注册已移除、panellist id 与 main key 同值、模块 id 不变；
  *   B. 区块结构 —— portal 规格的 pill / chip / card-head / alert 都在，
  *      五张卡（mode/auth/pairing/cloudflare/devices）带 data-mgw-card 钩子；
  *   C. i18n 完整性 —— 源码里每个 tr('…') 单串键在 EN 表有词条；
@@ -32,11 +32,16 @@ const ok = (name, pass, detail = '') => {
 const count = (haystack, needle) => haystack.split(needle).length - 1
 
 function slotMounts(src) {
+  // 2026-11-08 打回反转：slot 拓扑向 portal（dsh-remote-portal）对齐——
+  // panellist 挂入口、main 放主内容页；footer.action 旧入口与 overlay 注册移除
+  //（浮层类内容只有配对二维码，照 portal 的 QR-in-panel 语义留在面板内部）。
   ok('A1 模块 id 保持 dsh-host-gateway', src.includes("id: 'dsh-host-gateway'"), 'window.__ModuleLoader__.load 的 id 不能变')
-  ok('A2 sidebar.footer.action 恰一次', count(src, "slots.inject('sidebar.footer.action'") === 1, `actual=${count(src, "slots.inject('sidebar.footer.action'")}`)
-  ok('A3 shell.overlay 恰一次', count(src, "slots.inject('shell.overlay'") === 1, `actual=${count(src, "slots.inject('shell.overlay'")}`)
-  ok('A4 未新增 panellist/main 挂载', !src.includes("slots.inject('sidebar.panellist'") && !src.includes("slots.inject('main'"), '本轮只改呈现，slot 摆放不向 portal 对齐')
-  ok('A5 注册 id 不变', src.includes("id: 'mobile-gateway-devices'") && src.includes("id: 'mobile-gateway-devices-panel'"), 'footer 与 overlay 的注册 id 是既有 DOM 契约')
+  ok('A2 sidebar.panellist 已注册恰一次', count(src, "slots.inject('sidebar.panellist'") === 1, `actual=${count(src, "slots.inject('sidebar.panellist'")}`)
+  ok('A3 main 页面已注册恰一次', count(src, "slots.inject('main'") === 1, `actual=${count(src, "slots.inject('main'")}`)
+  ok('A4 footer.action 旧入口已移除', count(src, "slots.inject('sidebar.footer.action'") === 0, `actual=${count(src, "slots.inject('sidebar.footer.action'")}`)
+  ok('A5 shell.overlay 注册已移除', count(src, "slots.inject('shell.overlay'") === 0, `actual=${count(src, "slots.inject('shell.overlay'")}`)
+  ok('A6 panellist id 与 main key 同值（page-switch 契约）', /id: PANEL_ID, order: \d+/.test(src) && src.includes("key: PANEL_ID"), 'portal 的 page-switch 机制')
+  ok('A7 main 页面渲染面板组件', src.includes('React.createElement(DevicePanel)') && src.includes("className: 'mgw-page'"), '设备表/配对/状态区块搬进 main pane')
 }
 
 function blocks(src) {
@@ -107,7 +112,7 @@ if (!SELF) {
     return hits
   }
   const a = mutate('A-删pill', (src) => src.replace("'data-mgw-pill': '1'", "'data-x': '1'").replace(/className: 'mgw-pill',/, "className: 'mgw-hidden',"))
-  const b = mutate('B-挂错slot', (src) => src.replace("slots.inject('shell.overlay'", "slots.inject('sidebar.panellist'"))
+  const b = mutate('B-挂错slot', (src) => src.replace("slots.inject('sidebar.panellist'", "slots.inject('sidebar.footer.action'"))
   const c = mutate('C-删词条', (src) => src.replace('  "运行中": "Running",\n', ''))
   const d = mutate('D-注入后端', (src) => src.replace("'use strict'", "'use strict'; const mgwProbe = '/mgw/password';") === source ? src.replace("window.__ModuleLoader__.load({", "window.__ModuleLoader__.load({\n  // probe: /mgw/password") : src)
   const results = { A: a, B: b, C: c, D: d }

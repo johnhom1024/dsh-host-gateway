@@ -5,11 +5,14 @@
 
 ## check-104-panel-restyle.mjs
 
-静态源码门禁，39 条断言，四组：
+静态源码门禁，41 条断言，四组：
 
-- **A. slot 挂载点不变**：`sidebar.footer.action` + `shell.overlay` 各恰一次；
-  模块 id 仍为 `dsh-host-gateway`；未向 portal 的 `sidebar.panellist`/`main`
-  挂载对齐（本轮只改呈现）。
+- **A. slot 拓扑 = portal 同构**（2026-11-08 打回反转）：`sidebar.panellist`（入口，
+  id=PANEL_ID，order 90）与 `main`（主内容页，key=PANEL_ID）各恰一次且同值
+  （portal 的 page-switch 契约）；旧 `sidebar.footer.action` 入口与 `shell.overlay`
+  注册已移除（浮层类内容只剩配对二维码，照 portal 的 QR-in-panel 语义留在面板内部）；
+  模块 id 仍为 `dsh-host-gateway`；main 页面渲染 DevicePanel（设备表/配对/状态搬进
+  main pane）。
 - **B. 区块结构**：portal 规格的 `.mgw-pill/.mgw-chip/.mgw-card-head/.mgw-card-title/.mgw-alert`
   都在；五张卡带 `data-mgw-card="mode|auth|pairing|cloudflare|devices"` 钩子。
 - **C. i18n 完整性**：源码中每个 `tr('…')` 单串键都有 EN 词条（zh 为 key 本身，
@@ -29,7 +32,7 @@ node docs/evidence/check-104-panel-restyle.mjs --self-test  # 负向，全部命
 | mutant | 变异 | 命中目标 |
 | --- | --- | --- |
 | A-删pill | pill 元素与钩子移除 | B 组区块断言 |
-| B-挂错slot | `shell.overlay` → `sidebar.panellist` | A 组挂载点断言 |
+| B-挂错slot | `sidebar.panellist` → `sidebar.footer.action`（回退旧入口） | A 组挂载点断言 |
 | C-删词条 | 删 `"运行中": "Running"` EN 词条 | C 组 i18n 断言 |
 | D-注入后端 | 源码注入 `/mgw/password` 字符串 | D 组纯度断言 |
 

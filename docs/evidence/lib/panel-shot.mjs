@@ -108,14 +108,7 @@ try {
   const ready = await evaluate('window.__panelReady === true')
   if (!ready) throw new Error('panel did not boot (window.__panelReady false)')
 
-  // 打开面板（真实交互路径：侧栏底部按钮）。
-  const opened = await evaluate(`(() => {
-    const button = document.querySelector('button[aria-label="移动设备管理"], button[aria-label="Mobile device management"], button[title="移动设备管理"]')
-    if (!button) return false
-    button.dispatchEvent(new MouseEvent('click', { bubbles: true }))
-    return true
-  })()`)
-  if (!opened) throw new Error('footer button not found')
+  // 面板已迁入 main pane（portal 同构拓扑），页面直出，无需点击入口。
   // 等 pill 就绪（running/off）与可信设备卡出现。
   for (let attempt = 0; attempt < 40; attempt += 1) {
     const state = await evaluate(`(() => {
