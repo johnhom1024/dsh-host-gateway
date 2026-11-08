@@ -26,6 +26,9 @@ id=dsh-host-gateway，order 90）+ `main`（主内容页，key 同值 = 壳的 p
 | `pc/panel-restyle_006-three-tabs-1440.png` | tab 条只剩三项（通用设置/连接与配对/可信设备），安装应用 tab 及安装引导已删，1440×900 @2x |
 | `mobile/panel-restyle_006-three-tabs-390.png` | 同上 390×844 @3x，页面级横向溢出 0 |
 
+| `pc/panel-restyle_007-mode-toggle-1440.png` | 网关运行模式卡：chip 换开关（auth 卡同款 role=switch），三档下拉删除，1440×900 @2x |
+| `mobile/panel-restyle_007-mode-toggle-390.png` | 同上 390×844 @3x，页面级横向溢出 0 |
+
 采集方式（真实后端 + 真实 client.js，仅 DSH 壳层是 stub）：
 
 ```sh

@@ -56,6 +56,12 @@ function blocks(src) {
   ok('B5 header 不再渲染工具按钮', !src.includes("title: tr('工具')") && !src.includes("styles.toolsMenu") && !src.includes('runTool') && !src.includes('setToolsOpen'), '齿轮/菜单/runTool 全部移除')
   ok('B7 nav 水平 tab 条布局', /\.mgw-nav \{[^}]*flex-direction: row/.test(src) && /\.mgw-nav \{[^}]*flex-wrap: nowrap/.test(src) && /\.mgw-nav \{[^}]*overflow-x: auto/.test(src), 'portal tabbar：行内排列、不换行、可横滚')
   ok('B8 mgw-body 纵向（tab 上内容下）', /\.mgw-body \{[^}]*flex-direction: column/.test(src) && !src.includes('grid-template-columns: 180px'), '不再左栏竖排双栏')
+  const modeStart = src.indexOf("'data-mgw-card': 'mode'")
+  const modeEnd = src.indexOf("'data-mgw-card': 'auth'")
+  const modeCard = modeStart >= 0 && modeEnd > modeStart ? src.slice(modeStart, modeEnd) : ''
+  ok('B13 mode 卡存在开关', src.includes("'data-mgw-mode-switch': '1'") && modeCard.includes("role: 'switch'") && modeCard.includes("'aria-label': tr('网关运行模式')"), 'chip 换成 role=switch 开关')
+  ok('B14 mode 卡无下拉', modeCard !== '' && !modeCard.includes('GatewaySelect') && !modeCard.includes("React.createElement('option'"), '三档下拉已删')
+  ok('B15 界面不再发 temporary', !src.includes("changeGatewayMode('temporary')") && src.includes("event.target.checked ? 'persistent' : 'disabled'"), '开=persistent 关=disabled；temporary 仅后端保留')
   ok('B10 nav 只剩三个 tab（无安装应用）', src.includes("['general', tr('通用设置')], ['pairing', tr('连接与配对')], ['devices', tr('可信设备')]]") && !src.includes("['install', tr('安装应用')]") && !src.includes("activeSection !== 'install'"), 'install tab 与面板块已删')
   ok('B11 安装引导零残留', !src.includes('InstallGuide') && !src.includes('RELEASES_LATEST') && !src.includes('TESTFLIGHT_URL') && !src.includes('TESTFLIGHT_APP_URL') && !src.includes('INSTALL_SHOTS') && !src.includes('api.github.com') && !src.includes('installRelease') && !src.includes('installLoading') && !src.includes('installPlatform'), '组件/常量/state/Release 拉取全部移除')
   ok('B12 安装类词条清零', !src.includes('安装应用') && !src.includes('TestFlight') && !src.includes('APK') && !src.includes('Whaleness') && !src.includes('最新版本'), 'EN/JA 两套词条删净')
@@ -130,12 +136,14 @@ if (!SELF) {
   const f = mutate('F-nav改回竖排', (src) => src.replace('flex-direction: row; flex-wrap: nowrap;', 'flex-direction: column;'))
   const g = mutate('G-塞回安装tab', (src) => src
     .replace("['devices', tr('可信设备')]]", "['devices', tr('可信设备')], ['install', tr('安装应用')]]")
-    .replace("const RELEASES_LATEST", "const INSTALL_SHOTS = {}\n    const RELEASES_LATEST"))
-  const results = { A: a, B: b, C: c, E: e, F: f, G: g, D: d }
+    + "\n    const INSTALL_SHOTS = { android: '', ios: '' }\n")
+  const h = mutate('H-塞回下拉', (src) => src.replace("'data-mgw-card': 'auth'",
+    "'data-mgw-card': 'mode-x', hidden: true }, React.createElement(GatewaySelect, { value: 'temporary' }, React.createElement('option', { value: 'temporary' }, 'x')), React.createElement('section', { style: styles.card, 'data-mgw-card': 'auth'"))
+  const results = { A: a, B: b, C: c, E: e, F: f, G: g, H: h, D: d }
   if (Object.values(results).some((v) => v === null)) {
     if (!process.exitCode) process.exitCode = 3
   } else if (Object.values(results).every((v) => v > 0)) {
-    console.log(`✅ check-104 --self-test：7 个 mutant 全部被门禁抓住（负向通过）`)
+    console.log(`✅ check-104 --self-test：8 个 mutant 全部被门禁抓住（负向通过）`)
     process.exit(1)
   } else {
     console.error(`❌ check-104 --self-test：有 mutant 逃脱（${JSON.stringify(results)}）`)
