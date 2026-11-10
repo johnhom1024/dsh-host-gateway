@@ -22,6 +22,8 @@ import { dirname, join } from 'node:path'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const source = readFileSync(join(root, 'lib', 'client.js'), 'utf8')
+const devicesSource = readFileSync(join(root, 'lib', 'devices.js'), 'utf8')
+const indexSource = readFileSync(join(root, 'lib', 'index.mjs'), 'utf8')
 const SELF = process.argv.includes('--self-test')
 
 const checks = []
@@ -59,6 +61,7 @@ function blocks(src) {
   const modeStart = src.indexOf("'data-mgw-card': 'mode'")
   const modeEnd = src.indexOf("'data-mgw-card': 'auth'")
   const modeCard = modeStart >= 0 && modeEnd > modeStart ? src.slice(modeStart, modeEnd) : ''
+  ok('B16 配对卡大字短码', src.includes("'data-mgw-pair-code': '1'") && src.includes("qr.payload.pairingCode") && src.includes('连错 5 次作废'), '8 位码大字展示 + 防爆破文案')
   ok('B13 mode 卡存在开关', src.includes("'data-mgw-mode-switch': '1'") && modeCard.includes("role: 'switch'") && modeCard.includes("'aria-label': tr('网关运行模式')"), 'chip 换成 role=switch 开关')
   ok('B14 mode 卡无下拉', modeCard !== '' && !modeCard.includes('GatewaySelect') && !modeCard.includes("React.createElement('option'"), '三档下拉已删')
   ok('B15 界面不再发 temporary', !src.includes("changeGatewayMode('temporary')") && src.includes("event.target.checked ? 'persistent' : 'disabled'"), '开=persistent 关=disabled；temporary 仅后端保留')
@@ -97,16 +100,22 @@ function purity(src) {
   }
 }
 
-function run(src) {
+function run(sources) {
   checks.length = 0
-  slotMounts(src)
-  blocks(src)
-  i18n(src)
-  purity(src)
+  const client = sources.client
+  slotMounts(client)
+  blocks(client)
+  i18n(client)
+  purity(client)
+  // 短码三源断言（devices.js / index.mjs）
+  const genFn = sources.devices.slice(sources.devices.indexOf('function generatePairingCode'), sources.devices.indexOf('function normalizePairingCode'))
+  ok('B17 短码生成与归一（devices.js）', sources.devices.includes('crypto.randomBytes(5)') && sources.devices.includes('CROCKFORD_ALPHABET') && sources.devices.includes('normalizePairingCode') && genFn.includes('randomBytes(5)') && !genFn.includes('base64url'), '8 位 Crockford，无 43 位旧生成')
+  ok('B18 失败作废逻辑（devices.js）', sources.devices.includes('pairingMaxFailures') && sources.devices.includes('pairingFailures += 1') && sources.devices.includes('pairings.clear()'), '超阈值作废全部未过期配对')
+  ok('B19 IP 节流挂点（index.mjs）', sources.index.includes('PAIRING_IP_FAILURE_LIMIT = 10') && sources.index.includes('PAIRING_IP_WINDOW_MS = 60_000') && sources.index.includes('pairingThrottled(') && sources.index.includes('recordPairingFailure(') && sources.index.includes("status === 429 ? 'Too Many Requests'"), '滑动窗口 + 429 拒绝')
   return checks.filter((entry) => !entry.pass)
 }
 
-const failures = run(source)
+const failures = run({ client: source, devices: devicesSource, index: indexSource })
 if (!SELF) {
   if (failures.length) {
     console.error(`❌ check-104：${failures.length} 条断言未过`)
@@ -115,14 +124,17 @@ if (!SELF) {
     console.log(`✅ check-104 通过：${checks.length} 条（slot 挂载 / 区块结构 / i18n 完整 / 行为零变化）`)
   }
 } else {
-  const mutate = (name, fn) => {
-    const mutant = fn(source)
-    if (mutant === source) {
+  const mutate = (name, fn, which = 'client') => {
+    const sources = { client: source, devices: devicesSource, index: indexSource }
+    const baseSrc = sources[which]
+    const mutant = fn(baseSrc)
+    if (mutant === baseSrc) {
       console.error(`SETUP ${name}: 变异未生效（源码标记漂移？）`)
       process.exitCode = 3
       return null
     }
-    const hits = run(mutant).length
+    sources[which] = mutant
+    const hits = run(sources).length
     console.log(`mutant ${name}: 命中 ${hits} 条断言`)
     return hits
   }
@@ -139,11 +151,18 @@ if (!SELF) {
     + "\n    const INSTALL_SHOTS = { android: '', ios: '' }\n")
   const h = mutate('H-塞回下拉', (src) => src.replace("'data-mgw-card': 'auth'",
     "'data-mgw-card': 'mode-x', hidden: true }, React.createElement(GatewaySelect, { value: 'temporary' }, React.createElement('option', { value: 'temporary' }, 'x')), React.createElement('section', { style: styles.card, 'data-mgw-card': 'auth'"))
-  const results = { A: a, B: b, C: c, E: e, F: f, G: g, H: h, D: d }
+  const i = mutate('I-改回43位码', (devicesSrc) => devicesSrc
+    .replace(/function generatePairingCode\(\) \{[\s\S]*?\n\}/, 'function generatePairingCode() {\n  return crypto.randomBytes(32).toString(\'base64url\')\n}'), 'devices')
+  const j = mutate('J-删失败作废', (devicesSrc) => devicesSrc
+    .replace('        pairingFailures += 1\n', '')
+    .replace(/        if \(pairingFailures >= pairingMaxFailures\) \{\n          pairings\.clear\(\)\n          pairingFailures = 0\n        \}\n/, ''), 'devices')
+  const k = mutate('K-删IP节流', (indexSrc) => indexSrc
+    .replace(/          if \(pairingThrottled\(pairingPeer\)\) \{[\s\S]*?\n          \}\n/, ''), 'index')
+  const results = { A: a, B: b, C: c, E: e, F: f, G: g, H: h, I: i, J: j, K: k, D: d }
   if (Object.values(results).some((v) => v === null)) {
     if (!process.exitCode) process.exitCode = 3
   } else if (Object.values(results).every((v) => v > 0)) {
-    console.log(`✅ check-104 --self-test：8 个 mutant 全部被门禁抓住（负向通过）`)
+    console.log(`✅ check-104 --self-test：11 个 mutant 全部被门禁抓住（负向通过）`)
     process.exit(1)
   } else {
     console.error(`❌ check-104 --self-test：有 mutant 逃脱（${JSON.stringify(results)}）`)

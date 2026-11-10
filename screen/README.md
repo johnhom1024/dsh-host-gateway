@@ -29,6 +29,9 @@ id=dsh-host-gateway，order 90）+ `main`（主内容页，key 同值 = 壳的 p
 | `pc/panel-restyle_007-mode-toggle-1440.png` | 网关运行模式卡：chip 换开关（auth 卡同款 role=switch），三档下拉删除，1440×900 @2x |
 | `mobile/panel-restyle_007-mode-toggle-390.png` | 同上 390×844 @3x，页面级横向溢出 0 |
 
+| `pc/pairing-short-code_001-dialog-1440.png` | 配对码改 8 位 Crockford Base32 短码：弹窗大字展示「7SD74BF9」样例 + 「连错 5 次作废」文案，1440×900 @2x |
+| `mobile/pairing-short-code_001-dialog-390.png` | 同上 390×844 @3x，页面级横向溢出 0 |
+
 采集方式（真实后端 + 真实 client.js，仅 DSH 壳层是 stub）：
 
 ```sh
