@@ -5,7 +5,7 @@
 
 ## check-104-panel-restyle.mjs
 
-静态源码门禁，51 条断言，四组：
+静态源码门禁，55 条断言，跨 client.js / devices.js / index.mjs 三源，四组：
 
 - **A. slot 拓扑 = portal 同构**（2026-11-08 打回反转）：`sidebar.panellist`（入口，
   id=PANEL_ID，order 90）与 `main`（主内容页，key=PANEL_ID）各恰一次且同值
@@ -55,6 +55,16 @@ B13/B14/B15（feat/mode-toggle）：mode 卡 chip 换成 role=switch 开关
 下拉删除，「临时开启」「常驻开启」「关闭」词条（EN/JA）删净，新增
 「开启/关闭网关运行模式」title 词条；temporary 仅后端保留，当前临时态时
 开关如实显示为开、描述行照旧倒计时。B14 抓 mutant H。
+
+B16–B19 + 负向 I/J/K（feat/pairing-short-code，**跨三源门禁**）：
+B16 配对弹窗大字短码（`data-mgw-pair-code`）；B17/B18 查 `lib/devices.js`
+（`crypto.randomBytes(5)` → 8 位 Crockford Base32、只做大小写归一、失败作废）；
+B19 查 `lib/index.mjs`（`PAIRING_IP_FAILURE_LIMIT=10` / `PAIRING_IP_WINDOW_MS=60s`
+滑动窗口 + 429）。mutant I（generatePairingCode 改回 43 位 base64url）、J（删失败
+作废）、K（删 IP 节流）分别命中 B17/B18/B19。单测 `test/pairing-code.test.mjs`
+（码规格 10 例 + 归一 + 5 次作废 + 单次使用回归）、`test/pairing-throttle.test.mjs`
+（独立 harness 注入 limit=3/window=400ms：超限 429、窗口滑出恢复、正确码不受
+历史失败影响）。
 
 B7/B8/B9（同分支第二笔）：nav 为 portal 水平 tab 条（flex-direction: row +
 nowrap + overflow-x:auto），mgw-body 纵向（tab 上内容下），选中态 accent 下划线。

@@ -109,6 +109,8 @@ try {
   if (!ready) throw new Error('panel did not boot (window.__panelReady false)')
 
   // 面板已迁入 main pane（portal 同构拓扑），页面直出，无需点击入口。
+  // --pairing：进「连接与配对」tab 并生成配对二维码，拍短码大字弹窗。
+  const openPairing = args.includes('--pairing')
   // 等 pill 就绪（running/off）与可信设备卡出现。
   for (let attempt = 0; attempt < 40; attempt += 1) {
     const state = await evaluate(`(() => {
@@ -119,6 +121,35 @@ try {
     if (state.card && state.pill && state.pill !== 'loading') break
     await wait(250)
   }
+  if (openPairing) {
+    const opened = await evaluate(`(() => {
+      const tabs = [...document.querySelectorAll('.mgw-nav button')]
+      const pairing = tabs.find((t) => t.textContent?.includes('连接与配对'))
+      if (!pairing) return 'tab-missing'
+      pairing.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+      return 'tab-ok'
+    })()`)
+    if (opened !== 'tab-ok') throw new Error(`pairing tab not found: ${opened}`)
+    await wait(300)
+    const generated = await evaluate(`(() => {
+      const buttons = [...document.querySelectorAll('button')]
+      const generate = buttons.find((b) => b.textContent?.includes('生成配对二维码'))
+      if (!generate) return 'btn-missing'
+      generate.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+      return 'gen-ok'
+    })()`)
+    if (generated !== 'gen-ok') throw new Error(`generate button not found: ${generated}`)
+    // 等配对弹窗 + 大字短码出现
+    let codeText = ''
+    for (let attempt = 0; attempt < 40; attempt += 1) {
+      codeText = await evaluate(`document.querySelector('[data-mgw-pair-code]')?.textContent ?? ''`)
+      if (codeText) break
+      await wait(250)
+    }
+    if (!/^[0-9ABCDEFGHJKMNPQRSTVWXYZ]{8}$/.test(codeText)) throw new Error(`short code invalid on screen: "${codeText}"`)
+    await wait(400)
+  }
+
   const final = await evaluate(`(() => {
     const nav = document.querySelector('.mgw-nav')
     const content = document.querySelector('.mgw-content')
